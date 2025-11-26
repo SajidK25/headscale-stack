@@ -1,41 +1,31 @@
-version: "3.9"
-
 services:
-  # cloudflared:
-  #   image: cloudflare/cloudflared:latest
-  #   container_name: cloudflared
-  #   restart: unless-stopped
-  #   command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
-  #   environment:
-  #     - TUNNEL_METRICS=0.0.0.0:9090
-  #   volumes:
-  #     - ./cloudflared:/etc/cloudflared
-  #   networks:
-  #     - internal
-
   headscale:
-    image: headscale/headscale:latest
+    image: headscale/headscale:stable   # Alpine = has shell, easier debugging
     container_name: headscale
     restart: unless-stopped
-    command: serve
+    ports:
+      - "0.0.0.0:8081:8080"
+      - "0.0.0.0:9090:9090"
     volumes:
-      - ./headscale/config/config.yaml:/etc/headscale/config.yaml
-      - ./headscale/data:/var/lib/headscale
-    networks:
-      - internal
-    # Headscale listens on 0.0.0.0:8080 inside the container
-    expose:
-      - "8080"
+      - headscale_data:/var/lib/headscale
+      - ./headscale/config:/etc/headscale
+      - ./headscale/lib:/var/lib/headscale
+      - ./headscale/run:/var/run/headscale
+    command: serve
+    healthcheck:
+        test: ["CMD", "headscale", "health"]
 
-  headscale-admin:
-    image: goodieshq/headscale-admin:latest
-    container_name: headscale-admin
+  headscale-ui:
+    image: ghcr.io/gurucomputing/headscale-ui:latest
+    container_name: headscale-ui
     restart: unless-stopped
-    networks:
-      - internal
-    # Usually serves on port 80 inside the container
-    expose:
-      - "80"
+    ports:
+      - "8001:8080"
+    environment:
+      - AUTHENTICATION_METHOD=disabled
+      - HEADSCALE_API_URL=http://headscale:8080
+    depends_on:
+      - headscale
 
   pangolin:
     image: fosrl/pangolin:latest
@@ -43,39 +33,16 @@ services:
     restart: unless-stopped
     volumes:
       - ./pangolin/config:/app/config
+    environment:
+      - HEADSCALE_URL=http://headscale:8080
+    ports:
+      - "8002:3001"
+      - "8003:3002"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
-      interval: 3s
-      timeout: 3s
+      interval: "3s"
+      timeout: "3s"
       retries: 15
-    networks:
-      - internal
-    expose:
-      - "3001"
-
-  gerbil:
-    image: fosrl/gerbil:latest
-    container_name: gerbil
-    restart: unless-stopped
-    depends_on:
-      pangolin:
-        condition: service_healthy
-    command:
-      - --reachableAt=http://gerbil:3004
-      - --generateAndSaveKeyTo=/var/config/key
-      - --remoteConfig=http://pangolin:3001/api/v1/
-    volumes:
-      - ./pangolin/config:/var/config
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-    # WireGuard ports exposed on the host (LAN only, still fine)
-    ports:
-      - "51820:51820/udp"
-      - "21820:21820/udp"
-    networks:
-      - internal
-
-networks:
-  internal:
-    driver: bridge
+  
+volumes:
+  headscale_data:
