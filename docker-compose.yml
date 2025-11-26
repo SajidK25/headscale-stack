@@ -1,45 +1,81 @@
 version: "3.9"
 
 services:
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: cloudflared
+  #   restart: unless-stopped
+  #   command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+  #   environment:
+  #     - TUNNEL_METRICS=0.0.0.0:9090
+  #   volumes:
+  #     - ./cloudflared:/etc/cloudflared
+  #   networks:
+  #     - internal
+
   headscale:
     image: headscale/headscale:latest
     container_name: headscale
     restart: unless-stopped
-    ports:
-      - "8080:8080"       # gRPC + HTTP (Tailscale clients)
-      - "8090:8090"       # metrics (optional)
+    command: serve
     volumes:
-      - headscale_data:/var/lib/headscale
-      - ./config:/etc/headscale/
-    command: headscale serve
-    environment:
-      - TZ=Etc/UTC
+      - ./headscale/config/config.yaml:/etc/headscale/config.yaml
+      - ./headscale/data:/var/lib/headscale
+    networks:
+      - internal
+    # Headscale listens on 0.0.0.0:8080 inside the container
+    expose:
+      - "8080"
 
-  # Official Headscale Web Admin (the one from gurucomputing)
   headscale-admin:
-    image: ghcr.io/gurucomputing/headscale-admin:latest
+    image: goodieshq/headscale-admin:latest
     container_name: headscale-admin
     restart: unless-stopped
-    ports:
-      - "8001:80"
-    environment:
-      - AUTHENTICATION_METHOD=disabled   # remove this line later when you want login
-      - BASE_DOMAIN=localhost             # works fine locally
-    depends_on:
-      - headscale
+    networks:
+      - internal
+    # Usually serves on port 80 inside the container
+    expose:
+      - "80"
 
-  # Pangolin – the beautiful modern UI everyone loves
   pangolin:
-    image: gulled/pangolin:latest
+    image: fosrl/pangolin:latest
     container_name: pangolin
     restart: unless-stopped
-    ports:
-      - "8002:8080"
-    environment:
-      # Important: use the container name + port, NOT localhost
-      - HEADSCALE_URL=http://headscale:8080
-    depends_on:
-      - headscale
+    volumes:
+      - ./pangolin/config:/app/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    networks:
+      - internal
+    expose:
+      - "3001"
 
-volumes:
-  headscale_data:
+  gerbil:
+    image: fosrl/gerbil:latest
+    container_name: gerbil
+    restart: unless-stopped
+    depends_on:
+      pangolin:
+        condition: service_healthy
+    command:
+      - --reachableAt=http://gerbil:3004
+      - --generateAndSaveKeyTo=/var/config/key
+      - --remoteConfig=http://pangolin:3001/api/v1/
+    volumes:
+      - ./pangolin/config:/var/config
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    # WireGuard ports exposed on the host (LAN only, still fine)
+    ports:
+      - "51820:51820/udp"
+      - "21820:21820/udp"
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
