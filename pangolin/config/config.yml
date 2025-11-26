@@ -2,7 +2,7 @@
 # https://docs.pangolin.net/self-host/advanced/config-file
 
 app:
-  dashboard_url: http://localhost:3002
+  dashboard_url: https://pangolin.t99ltd.com
   log_level: debug
 
 domains:
@@ -10,10 +10,7 @@ domains:
     base_domain: example.com
 
 server:
-  host: 0.0.0.0
-  port: 3001
-  baseUrl: http://localhost:3001  # For local access; update to your domain/IP later
-  secret: my_secret_key
+  baseUrl: https://pangolin.t99ltd.com
 
 gerbil:
   base_endpoint: example.com

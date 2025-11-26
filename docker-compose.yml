@@ -1,11 +1,50 @@
 services:
+  traefik:
+    image: traefik:v3.1  # Latest v3 as of Nov 2025
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      # Enable dashboard (access at https://traefik.t99ltd.com)
+      - --api.dashboard=true
+      - --api.insecure=false  # Dashboard only on HTTPS
+
+      # Docker provider (auto-discovers labels)
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=traefik
+
+      # Entry points
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure  # HTTP → HTTPS redirect
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+
+      # Let's Encrypt (ACME)
+      - --certificatesresolvers.myresolver.acme.tlschallenge=true
+      - --certificatesresolvers.myresolver.acme.email=admin@t99ltd.com  # ← CHANGE TO YOUR EMAIL
+      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
+
+      # Logs
+      - --log.level=INFO
+      - --accesslog=true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # For auto-discovery
+      - ./traefik/letsencrypt:/letsencrypt  # Persistent certs (create dir first: mkdir -p ./traefik/letsencrypt && chmod 600 ./traefik/letsencrypt)
+    networks:
+      - traefik
+    environment:
+      # Optional: Basic auth for dashboard (generate htpasswd: htpasswd -nb admin yourpassword)
+      # - TRAEFIK_USERNAME=admin
+      # - TRAEFIK_PASSWORD=yourhashedpassword
+
   headscale:
-    image: headscale/headscale:stable   # Alpine = has shell, easier debugging
+    image: headscale/headscale:stable
     container_name: headscale
     restart: unless-stopped
-    ports:
-      - "0.0.0.0:8081:8080"
-      - "0.0.0.0:9090:9090"
+    # NO ports exposed—Traefik handles routing
     volumes:
       - headscale_data:/var/lib/headscale
       - ./headscale/config:/etc/headscale
@@ -13,19 +52,57 @@ services:
       - ./headscale/run:/var/run/headscale
     command: serve
     healthcheck:
-        test: ["CMD", "headscale", "health"]
+      test: ["CMD", "headscale", "health"]
+    depends_on:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+
+      # gRPC Router (for Tailscale clients 1.40+; full host match)
+      - "traefik.http.routers.headscale-grpc.rule=Host(`headscale.t99ltd.com`)"
+      - "traefik.http.routers.headscale-grpc.entrypoints=websecure"
+      - "traefik.http.routers.headscale-grpc.tls.certresolver=myresolver"
+      - "traefik.http.routers.headscale-grpc.service=headscale-grpc"
+      - "traefik.http.services.headscale-grpc.loadbalancer.server.port=8080"
+      - "traefik.http.services.headscale-grpc.loadbalancer.server.scheme=h2c"  # HTTP/2 for gRPC
+      - "traefik.http.routers.headscale-grpc.transport.http2=true"  # Enable HTTP/2
+
+      # HTTP Router (for legacy endpoints: /key, /register, /metrics, etc.)
+      - "traefik.http.routers.headscale-http.rule=Host(`headscale.t99ltd.com`) && (PathPrefix(`/key`) || PathPrefix(`/register`) || PathPrefix(`/metrics`) || PathPrefix(`/health`) || PathPrefix(`/derp`) || PathPrefix(`/apple`) || PathPrefix(`/android`) || Path(`/headscale.crt`))"
+      - "traefik.http.routers.headscale-http.entrypoints=websecure"
+      - "traefik.http.routers.headscale-http.tls.certresolver=myresolver"
+      - "traefik.http.routers.headscale-http.service=headscale-http"
+      - "traefik.http.services.headscale-http.loadbalancer.server.port=8080"
+
+    networks:
+      - traefik
 
   headscale-ui:
     image: ghcr.io/gurucomputing/headscale-ui:latest
     container_name: headscale-ui
     restart: unless-stopped
-    ports:
-      - "8001:8080"
+    # NO ports—Traefik routes
     environment:
       - AUTHENTICATION_METHOD=disabled
-      - HEADSCALE_API_URL=http://headscale:8080
+      - HEADSCALE_API_URL=http://headscale:8080  # Internal Docker network
+      - BASE_DOMAIN=headscale-ui.t99ltd.com  # For redirects/cookies
     depends_on:
       - headscale
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      # Full host routing (UI serves on /web internally)
+      - "traefik.http.routers.headscale-ui.rule=Host(`headscale-ui.t99ltd.com`)"
+      - "traefik.http.routers.headscale-ui.entrypoints=websecure"
+      - "traefik.http.routers.headscale-ui.tls.certresolver=myresolver"
+      - "traefik.http.routers.headscale-ui.service=headscale-ui"
+      - "traefik.http.services.headscale-ui.loadbalancer.server.port=8080"
+      # Strip /web if needed (optional; test without first)
+      # - "traefik.http.routers.headscale-ui.middlewares=ui-strip"
+      # - "traefik.http.middlewares.ui-strip.stripprefix.prefixes=/web"
+    networks:
+      - traefik
 
   pangolin:
     image: fosrl/pangolin:latest
@@ -33,16 +110,55 @@ services:
     restart: unless-stopped
     volumes:
       - ./pangolin/config:/app/config
+      # Add data/log persistence if not already (from your structure)
+      - ./pangolin/db:/app/data
+      - ./pangolin/logs:/app/logs
     environment:
-      - HEADSCALE_URL=http://headscale:8080
-    ports:
-      - "8002:3001"
-      - "8003:3002"
+      - HEADSCALE_URL=http://headscale:8080  # Internal
+    # NO ports—Traefik routes
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
       interval: "3s"
       timeout: "3s"
       retries: 15
-  
+    depends_on:
+      - headscale
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      # Full host routing (dashboard on root)
+      - "traefik.http.routers.pangolin.rule=Host(`pangolin.t99ltd.com`)"
+      - "traefik.http.routers.pangolin.entrypoints=websecure"
+      - "traefik.http.routers.pangolin.tls.certresolver=myresolver"
+      - "traefik.http.routers.pangolin.service=pangolin"
+      - "traefik.http.services.pangolin.loadbalancer.server.port=3001"
+      # Optional: Route /dashboard to 3002 if you use it (from your config)
+      - "traefik.http.routers.pangolin-dashboard.rule=Host(`pangolin.t99ltd.com`) && PathPrefix(`/dashboard`)"
+      - "traefik.http.routers.pangolin-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.pangolin-dashboard.tls.certresolver=myresolver"
+      - "traefik.http.routers.pangolin-dashboard.service=pangolin-dashboard"
+      - "traefik.http.services.pangolin-dashboard.loadbalancer.server.port=3002"
+    networks:
+      - traefik
+
+  # Traefik Dashboard Router (self-routes)
+  traefik-dashboard:
+    image: traefik/whoami:latest  # Dummy service to attach labels (Traefik routes its own dashboard)
+    container_name: traefik-dashboard
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.t99ltd.com`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+      - "traefik.http.routers.traefik.service=api@internal"  # Routes to Traefik's internal API
+    networks:
+      - traefik
+
 volumes:
   headscale_data:
+
+networks:
+  traefik:
+    external: true  # Use the pre-created network
