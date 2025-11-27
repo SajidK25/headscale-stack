@@ -44,7 +44,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.headscale.rule=Host(`headscale.t99ltd.com`)"
-      - "traefik.http.routers.headscale.entrypoints=websecure"
+      - "traefik.http.routers.headscale.entrypoints=https"
       - "traefik.http.routers.headscale.tls.certresolver=letsEncrypt"
       - "traefik.http.services.headscale.loadbalancer.server.port=8080"
 
@@ -61,7 +61,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.headscale-ui.rule=Host(`headscale-ui.t99ltd.com`)"
-      - "traefik.http.routers.headscale-ui.entrypoints=websecure"
+      - "traefik.http.routers.headscale-ui.entrypoints=https"
       - "traefik.http.routers.headscale-ui.tls.certresolver=letsEncrypt"
       - "traefik.http.routers.headscale-ui.service=headscale-ui"
       - "traefik.http.services.headscale-ui.loadbalancer.server.port=8080"
@@ -80,7 +80,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.pangolin.rule=Host(`pangolin.t99ltd.com`)"
-      - "traefik.http.routers.pangolin.entrypoints=websecure"
+      - "traefik.http.routers.pangolin.entrypoints=https"
       - "traefik.http.routers.pangolin.tls.certresolver=letsEncrypt"
       - "traefik.http.routers.pangolin.service=pangolin"
       - "traefik.http.services.pangolin.loadbalancer.server.port=3002"
