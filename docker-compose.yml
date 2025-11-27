@@ -85,9 +85,7 @@ services:
     container_name: pangolin
     restart: unless-stopped
     volumes:
-      - ./pangolin/config:/app/config:ro
-      - ./pangolin/db:/app/data
-      - ./pangolin/logs:/app/logs
+      - ./pangolin/config:/app/config
     environment:
       - HEADSCALE_URL=http://headscale:8080
     networks:
