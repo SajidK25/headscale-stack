@@ -45,6 +45,7 @@ services:
       - traefik
     labels:
       - traefik.enable=true
+      - traefik.docker.network=traefik
       - traefik.http.routers.headscale-rtr.rule=Host(`headscale.example.com`) && PathPrefix(`/`)
       - traefik.http.services.headscale-svc.loadbalancer.server.port=8080
       - traefik.http.routers.headscale-rtr.middlewares=limit-headscale
