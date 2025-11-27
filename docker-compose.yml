@@ -60,7 +60,7 @@ services:
       - "traefik.http.routers.headscale-http.entrypoints=websecure"
       - "traefik.http.routers.headscale-http.tls.certresolver=le"
       - "traefik.http.routers.headscale-http.service=headscale-http"
-      - "traefik.http.services.headscale-http.loadbalancer.server.port=9090"
+      - "traefik.http.services.headscale-http.loadbalancer.server.port=8080"
 
   headscale-ui:
     image: ghcr.io/gurucomputing/headscale-ui:latest
