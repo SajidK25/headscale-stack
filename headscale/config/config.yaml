@@ -210,7 +210,7 @@ acme_url: https://acme-v02.api.letsencrypt.org/directory
 acme_email: ""
 
 # Domain name to request a TLS certificate for:
-tls_letsencrypt_hostname: headscale.t99ltd.com
+tls_letsencrypt_hostname: ""
 
 # Path to store certificates and metadata needed by
 # letsencrypt
