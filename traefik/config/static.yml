@@ -58,7 +58,7 @@ entryPoints:
 #         entryPoint: web
         
 certificatesResolvers:
-  myresolver:
+  letsEncrypt:
     acme:
       email: sajidk25@gmail.com
       storage: /etc/traefik/acme/acme.json
