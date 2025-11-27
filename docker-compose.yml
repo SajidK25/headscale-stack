@@ -17,7 +17,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.dashboard.rule=Host(`traefik.t99ltd.com`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api/overview`) || PathPrefix(`/api/version`) || PathPrefix(`/api/http`) || PathPrefix(`/api/entrypoints`) || PathPrefix(`/api/tcp`) || PathPrefix(`/api/udp`))"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
-      - "traefik.http.routers.dashboard.tls.certresolver=myresolver"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsEncrypt"
       - "traefik.http.routers.dashboard.service=api@internal"
       # # if you want to password protect your traefik dashboard uncomment the following and change the user:pass
       #- "traefik.http.routers.dashboard.middlewares=auth"
@@ -46,7 +46,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.headscale.rule=Host(`headscale.t99ltd.com`)"
       - "traefik.http.routers.headscale.entrypoints=websecure"
-      - "traefik.http.routers.headscale.tls.certresolver=myresolver"
+      - "traefik.http.routers.headscale.tls.certresolver=letsEncrypt"
       - "traefik.http.services.headscale.loadbalancer.server.port=8080"
 
   headscale-ui:
@@ -63,7 +63,7 @@ services:
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.headscale-ui.rule=Host(`headscale-ui.t99ltd.com`)"
       - "traefik.http.routers.headscale-ui.entrypoints=websecure"
-      - "traefik.http.routers.headscale-ui.tls.certresolver=myresolver"
+      - "traefik.http.routers.headscale-ui.tls.certresolver=letsEncrypt"
       - "traefik.http.routers.headscale-ui.service=headscale-ui"
       - "traefik.http.services.headscale-ui.loadbalancer.server.port=8080"
 
@@ -82,7 +82,7 @@ services:
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.pangolin.rule=Host(`pangolin.t99ltd.com`)"
       - "traefik.http.routers.pangolin.entrypoints=websecure"
-      - "traefik.http.routers.pangolin.tls.certresolver=myresolver"
+      - "traefik.http.routers.pangolin.tls.certresolver=letsEncrypt"
       - "traefik.http.routers.pangolin.service=pangolin"
       - "traefik.http.services.pangolin.loadbalancer.server.port=3002"
 
