@@ -11,7 +11,7 @@
 # https://myheadscale.example.com:443
 #
 log_level: info
-server_url: https://headscale.t99ltd.com:443
+server_url: https://headscale.t99ltd.com
 
 # Address to listen to / bind to on the server
 #
@@ -33,7 +33,7 @@ users:
 # For production:
 # grpc_listen_addr: 0.0.0.0:50443
 # grpc_listen_addr: 127.0.0.1:50443
-grpc_listen_addr: 0.0.0.0:8080
+grpc_listen_addr: 0.0.0.0:50443
 
 # Allow the gRPC admin interface to run in INSECURE
 # mode. This is not recommended as the traffic will
