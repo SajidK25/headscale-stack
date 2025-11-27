@@ -46,31 +46,31 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik
-      - traefik.http.routers.headscale-rtr.rule=Host(`headscale.example.com`) && PathPrefix(`/`)
-      - traefik.http.routers.headscale-rtr.entrypoints=websecure
-      - traefik.http.routers.headscale-rtr.tls.certresolver=le
-      - traefik.http.routers.headscale-rtr.service=headscale-svc
-      - traefik.http.services.headscale-svc.loadbalancer.server.port=8080
-      - traefik.http.routers.headscale-rtr.middlewares=limit-headscale
-      # Optional part for file upload max sizes
-      - traefik.http.middlewares.limit-headscale.buffering.maxRequestBodyBytes=50000000 # optional, only necessary for enabled file uploads
-      - traefik.http.middlewares.limit-headscale.buffering.maxResponseBodyBytes=50000000 # optional, only necessary for enabled file uploads
-      - traefik.http.middlewares.limit-headscale.buffering.memRequestBodyBytes=50000000 # optional, only necessary for enabled file uploads
-      - traefik.http.middlewares.limit-headscale.buffering.memResponseBodyBytes=50000000 # optional, only necessary for enabled file uploads
+      # - traefik.http.routers.headscale-rtr.rule=Host(`headscale.example.com`) && PathPrefix(`/`)
+      # - traefik.http.routers.headscale-rtr.entrypoints=websecure
+      # - traefik.http.routers.headscale-rtr.tls.certresolver=le
+      # - traefik.http.routers.headscale-rtr.service=headscale-svc
+      # - traefik.http.services.headscale-svc.loadbalancer.server.port=8080
+      # - traefik.http.routers.headscale-rtr.middlewares=limit-headscale
+      # # Optional part for file upload max sizes
+      # - traefik.http.middlewares.limit-headscale.buffering.maxRequestBodyBytes=50000000 # optional, only necessary for enabled file uploads
+      # - traefik.http.middlewares.limit-headscale.buffering.maxResponseBodyBytes=50000000 # optional, only necessary for enabled file uploads
+      # - traefik.http.middlewares.limit-headscale.buffering.memRequestBodyBytes=50000000 # optional, only necessary for enabled file uploads
+      # - traefik.http.middlewares.limit-headscale.buffering.memResponseBodyBytes=50000000 # optional, only necessary for enabled file uploads
       # gRPC + HTTP/2 for modern Tailscale clients
-      # - "traefik.http.routers.headscale-grpc.rule=Host(`headscale.t99ltd.com`)"
-      # - "traefik.http.routers.headscale-grpc.entrypoints=websecure"
-      # - "traefik.http.routers.headscale-grpc.tls.certresolver=le"
-      # - "traefik.http.routers.headscale-grpc.service=headscale-grpc"
-      # - "traefik.http.services.headscale-grpc.loadbalancer.server.port=8080"
-      # - "traefik.http.routers.headscale-grpc.grpc=true"
+      - "traefik.http.routers.headscale-grpc.rule=Host(`headscale.t99ltd.com`)"
+      - "traefik.http.routers.headscale-grpc.entrypoints=websecure"
+      - "traefik.http.routers.headscale-grpc.tls.certresolver=le"
+      - "traefik.http.routers.headscale-grpc.service=headscale-grpc"
+      - "traefik.http.services.headscale-grpc.loadbalancer.server.port=50443"
+      - "traefik.http.routers.headscale-grpc.grpc=true"
 
       # Legacy HTTP endpoints (registration, metrics, etc.)
-      # - "traefik.http.routers.headscale-http.rule=Host(`headscale.t99ltd.com`) && !PathPrefix(`/`)"
-      # - "traefik.http.routers.headscale-http.entrypoints=websecure"
-      # - "traefik.http.routers.headscale-http.tls.certresolver=le"
-      # - "traefik.http.routers.headscale-http.service=headscale-http"
-      # - "traefik.http.services.headscale-http.loadbalancer.server.port=8080"
+      - "traefik.http.routers.headscale-http.rule=Host(`headscale.t99ltd.com`) && !PathPrefix(`/`)"
+      - "traefik.http.routers.headscale-http.entrypoints=websecure"
+      - "traefik.http.routers.headscale-http.tls.certresolver=le"
+      - "traefik.http.routers.headscale-http.service=headscale-http"
+      - "traefik.http.services.headscale-http.loadbalancer.server.port=8080"
 
   headscale-ui:
     image: ghcr.io/gurucomputing/headscale-ui:latest
