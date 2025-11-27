@@ -1,0 +1,58 @@
+api:
+  insecure: true
+  dashboard: true
+
+providers:
+  docker:
+    exposedByDefault: false
+
+entryPoints:
+  web:
+    address: ":80"
+    http2:
+      maxConcurrentStreams: 250 # fix for network error on the proxy to my immich instance
+    http3:
+      advertisedPort: 443
+    # http:
+    #   redirections:
+    #     entryPoint:
+    #       to: websecure
+    #       scheme: https
+    forwardedHeaders:
+      trustedIPs:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - fc00::/7
+    proxyProtocol:
+      trustedIPs:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - fc00::/7
+  websecure:
+    address: ":443"
+    http2:
+      maxConcurrentStreams: 250 # fix for network error on the proxy to my immich instance
+    http3:
+      advertisedPort: 443
+    forwardedHeaders:
+      trustedIPs:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - fc00::/7
+    proxyProtocol:
+      trustedIPs:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - fc00::/7
+
+certificatesResolvers:
+  myresolver:
+    acme:
+      email: "sajidk25@gmail.com"
+      storage: "/letsencrypt/acme.json"
+      httpChallenge:
+        entryPoint: web
