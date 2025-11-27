@@ -48,19 +48,19 @@ services:
       - "traefik.docker.network=traefik"
 
       # gRPC + HTTP/2 for modern Tailscale clients
-      - "traefik.http.routers.headscale-grpc.rule=Host(`headscale.t99ltd.com`)"
-      - "traefik.http.routers.headscale-grpc.entrypoints=websecure"
-      - "traefik.http.routers.headscale-grpc.tls.certresolver=le"
-      - "traefik.http.routers.headscale-grpc.service=headscale-grpc"
-      - "traefik.http.services.headscale-grpc.loadbalancer.server.port=8080"
-      - "traefik.http.routers.headscale-grpc.grpc=true"
+      # - "traefik.http.routers.headscale-grpc.rule=Host(`headscale.t99ltd.com`)"
+      # - "traefik.http.routers.headscale-grpc.entrypoints=websecure"
+      # - "traefik.http.routers.headscale-grpc.tls.certresolver=le"
+      # - "traefik.http.routers.headscale-grpc.service=headscale-grpc"
+      # - "traefik.http.services.headscale-grpc.loadbalancer.server.port=8080"
+      # - "traefik.http.routers.headscale-grpc.grpc=true"
 
       # Legacy HTTP endpoints (registration, metrics, etc.)
-      # - "traefik.http.routers.headscale-http.rule=Host(`headscale.t99ltd.com`) && !PathPrefix(`/`)"
-      # - "traefik.http.routers.headscale-http.entrypoints=websecure"
-      # - "traefik.http.routers.headscale-http.tls.certresolver=le"
-      # - "traefik.http.routers.headscale-http.service=headscale-http"
-      # - "traefik.http.services.headscale-http.loadbalancer.server.port=8080"
+      - "traefik.http.routers.headscale-http.rule=Host(`headscale.t99ltd.com`) && !PathPrefix(`/`)"
+      - "traefik.http.routers.headscale-http.entrypoints=websecure"
+      - "traefik.http.routers.headscale-http.tls.certresolver=le"
+      - "traefik.http.routers.headscale-http.service=headscale-http"
+      - "traefik.http.services.headscale-http.loadbalancer.server.port=8080"
 
   headscale-ui:
     image: ghcr.io/gurucomputing/headscale-ui:latest
