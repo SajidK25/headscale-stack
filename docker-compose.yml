@@ -46,6 +46,19 @@ services:
       - "traefik.http.routers.headscale.rule=Host(`headscale.t99ltd.com`)"
       - "traefik.http.routers.headscale.entrypoints=https"
       - "traefik.http.routers.headscale.tls.certresolver=letsEncrypt"
+      # 1. Handle preflight OPTIONS directly (return 204 + CORS headers)
+      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolalloworiginlist=https://headscale-ui.t99ltd.com"
+      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolallowmethods=GET,POST,OPTIONS,DELETE"
+      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolallowheaders=*"
+      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.headscale-cors-preflight.headers.addvaryheader=true"
+      # 2. Add CORS headers to real responses
+      - "traefik.http.middlewares.headscale-cors-real.headers.accesscontrolalloworiginlist=https://headscale-ui.t99ltd.com"
+      - "traefik.http.middlewares.headscale-cors-real.headers.accesscontrolallowmethods=GET,POST,OPTIONS,DELETE"
+      - "traefik.http.middlewares.headscale-cors-real.headers.accesscontrolallowheaders=*"
+      # 3. Chain them: preflight → real
+      - "traefik.http.middlewares.headscale-cors.chain.middlewares=headscale-cors-preflight,headscale-cors-real"
+      - "traefik.http.routers.headscale.middlewares=headscale-cors"
       - "traefik.http.services.headscale.loadbalancer.server.port=8080"
 
   headscale-ui:
