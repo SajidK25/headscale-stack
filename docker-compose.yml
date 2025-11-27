@@ -47,6 +47,9 @@ services:
       - traefik.enable=true
       - traefik.docker.network=traefik
       - traefik.http.routers.headscale-rtr.rule=Host(`headscale.example.com`) && PathPrefix(`/`)
+      - traefik.http.routers.headscale-rtr.entrypoints=websecure
+      - traefik.http.routers.headscale-rtr.tls.certresolver=le
+      - traefik.http.routers.headscale-rtr.service=headscale-svc
       - traefik.http.services.headscale-svc.loadbalancer.server.port=8080
       - traefik.http.routers.headscale-rtr.middlewares=limit-headscale
       # Optional part for file upload max sizes
