@@ -89,27 +89,19 @@ services:
       - HEADSCALE_URL=http://headscale:8080
     networks:
       - traefik
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik"
-      - "traefik.http.routers.pangolin.rule=Host(`pangolin.t99ltd.com`)"
-      - "traefik.http.routers.pangolin.entrypoints=https"
-      - "traefik.http.routers.pangolin.tls.certresolver=letsEncrypt"
-      - "traefik.http.routers.pangolin.service=pangolin"
-      - "traefik.http.services.pangolin.loadbalancer.server.port=3002"
-
-  # traefik-dashboard:
-  #   image: traefik/whoami
-  #   container_name: traefik-dashboard
-  #   networks:
-  #     - traefik
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.traefik.rule=Host(`traefik.t99ltd.com`)"
-  #     - "traefik.http.routers.traefik.entrypoints=websecure"
-  #     - "traefik.http.routers.traefik.tls.certresolver=le"
-  #     - "traefik.http.routers.traefik.service=api@internal"
-
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.docker.network=traefik"
+    #   - "traefik.http.routers.pangolin.rule=Host(`pangolin.t99ltd.com`)"
+    #   - "traefik.http.routers.pangolin.entrypoints=https"
+    #   - "traefik.http.routers.pangolin.tls.certresolver=letsEncrypt"
+    #   - "traefik.http.routers.pangolin.service=pangolin"
+    #   - "traefik.http.services.pangolin.loadbalancer.server.port=3002"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
+      interval: "3s"
+      timeout: "3s"
+      retries: 15
 volumes:
   headscale_data:
 
