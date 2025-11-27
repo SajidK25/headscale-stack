@@ -1,19 +1,32 @@
 api:
-  insecure: true
-  dashboard: true
+  dashboard: true                             # Enable the dashboard
+  insecure: true                              # Enable the dashboard in insecure mode
+  debug: true                                 # Enable debug mode
+
+# Certificate Resolvers are responsible for retrieving certificates from an ACME server
+# See https://doc.traefik.io/traefik/https/acme/#certificate-resolvers
+certificatesResolvers:
+  letsEncrypt:
+    acme:
+      email: "borna@develo.agency"  # Email address used for registration
+      storage: "/etc/traefik/acme/acme.json"    # [Attention] File or key used for certificates storage
+      # caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+      tlsChallenge: {}
+# log:
+#   level: DEBUG
 
 entryPoints:
-  web:
-    address: ":80"
-    http2:
-      maxConcurrentStreams: 250 # fix for network error on the proxy to my immich instance
-    http3:
-      advertisedPort: 443
-    # http:
-    #   redirections:
-    #     entryPoint:
-    #       to: websecure
-    #       scheme: https
+  http:
+    address: ":80"                            # Create the HTTP entrypoint on port 80
+    http:
+      redirections:                           # HTTPS redirection (80 to 443)
+        entryPoint:
+          to: "https"                         # The target element
+          scheme: "https"
+    transport:
+      respondingTimeouts:
+        readTimeout: 3600s  # Adjust as needed
+        writeTimeout: 3600s  # Adjust as needed                    # The redirection target scheme
     forwardedHeaders:
       trustedIPs:
         - 10.0.0.0/8
@@ -26,12 +39,8 @@ entryPoints:
         - 172.16.0.0/12
         - 192.168.0.0/16
         - fc00::/7
-  websecure:
-    address: ":443"
-    http2:
-      maxConcurrentStreams: 250 # fix for network error on the proxy to my immich instance
-    http3:
-      advertisedPort: 443
+  https:
+    address: ":443"                           # Create the HTTPS entrypoint on port 443
     forwardedHeaders:
       trustedIPs:
         - 10.0.0.0/8
@@ -44,12 +53,18 @@ entryPoints:
         - 172.16.0.0/12
         - 192.168.0.0/16
         - fc00::/7
+  # dashboard:
+  #   address: ":9090"                          # Create the dashboard entrypoint on port 9090
+
+global:
+  checknewversion: true                       # [Attention] Periodically check if a new version has been released.
+  sendanonymoususage: true                    # [Attention] Periodically send anonymous usage statistics.
 
 providers:
   docker:
     endpoint: "unix:///var/run/docker.sock"   # Listen to the UNIX Docker socket
     exposedByDefault: false                   # Only expose container that are explicitly enabled (using label traefik.enabled)
-    network: "cleangor_network"                    # Default network to use for connections to all containers.
+    network: "traefik"                    # Default network to use for connections to all containers.
     # swarmmode: true                           # Activates the Swarm Mode (instead of standalone Docker).
     # swarmModeRefreshSeconds: 15               # Defines the polling interval (in seconds) in Swarm Mode.
     # watch: true                               # Watch Docker Swarm events
@@ -57,14 +72,3 @@ providers:
     filename: "/etc/traefik/config.yml"       # [Attention] Link to the dynamic configuration
     watch: true                               # Watch for modifications
   providersThrottleDuration: 10               # Configuration reload frequency
-        
-certificatesResolvers:
-  letsEncrypt:
-    acme:
-      email: sajidk25@gmail.com
-      storage: /etc/traefik/acme/acme.json
-      # caServer: https://acme-staging-v02.api.letsencrypt.org/directory
-      caServer: https://acme-v02.api.letsencrypt.org/directory
-      tlsChallenge: {}
-      # httpChallenge:
-      #   entryPoint: web

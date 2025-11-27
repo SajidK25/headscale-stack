@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: "traefik:v3.2"
+    image: "traefik:v3.3.4"
     container_name: "traefik"
     restart: "always"
     ports:
@@ -9,19 +9,18 @@ services:
     networks:
       - traefik
     volumes:
-      - "./traefik/letsencrypt:/letsencrypt"
+      - "./traefik/letsencrypt:/etc/traefik/acme"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./traefik/config/static.yml:/etc/traefik/traefik.yml:ro"
-      - "./traefik/config/dynamic.yml:/etc/traefik/dynamic.yaml:ro"
+      - "./traefik/config/dynamic.yml:/etc/traefik/config.yaml:ro"
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`traefik.t99ltd.com`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api/overview`) || PathPrefix(`/api/version`) || PathPrefix(`/api/http`) || PathPrefix(`/api/entrypoints`) || PathPrefix(`/api/tcp`) || PathPrefix(`/api/udp`))"
-      - "traefik.http.routers.dashboard.entrypoints=websecure"
-      - "traefik.http.routers.dashboard.tls.certresolver=letsEncrypt"
-      - "traefik.http.routers.dashboard.service=api@internal"
-      # # if you want to password protect your traefik dashboard uncomment the following and change the user:pass
-      #- "traefik.http.routers.dashboard.middlewares=auth"
-      #- "traefik.http.middlewares.auth.basicauth.users=" # to create user and pass:   bash -c 'echo $(htpasswd -nB admin) | sed -e s/\\$/\\$\\$/g'
+      - traefik.enable=true
+      - traefik.http.routers.traefik.entrypoints=https
+      - traefik.http.routers.traefik.rule=Host(`traefik.t99ltd.com`) # [Attention]
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.tls.certresolver=letsEncrypt
+      - traefik.http.routers.traefik.tls=true
+      - traefik.http.services.traefik.loadbalancer.server.port=8080
 
   headscale:
     image: headscale/headscale:stable
