@@ -62,7 +62,8 @@ certificatesResolvers:
     acme:
       email: sajidk25@gmail.com
       storage: /etc/traefik/acme/acme.json
-      caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+      # caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+      caServer: https://acme-v02.api.letsencrypt.org/directory
       tlsChallenge: {}
       # httpChallenge:
       #   entryPoint: web
