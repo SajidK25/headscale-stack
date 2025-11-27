@@ -210,7 +210,7 @@ acme_url: https://acme-v02.api.letsencrypt.org/directory
 acme_email: ""
 
 # Domain name to request a TLS certificate for:
-tls_letsencrypt_hostname: ""
+tls_letsencrypt_hostname: headscale.t99ltd.com
 
 # Path to store certificates and metadata needed by
 # letsencrypt
@@ -279,7 +279,7 @@ dns:
   # `base_domain` must be a FQDN, without the trailing dot.
   # The FQDN of the hosts will be
   # `hostname.base_domain` (e.g., _myhost.example.com_).
-  base_domain: example.com
+  base_domain: t99ltd.com
 
   # Whether to use the local DNS settings of a node or override the local DNS
   # settings (default) and force the use of Headscale's DNS configuration.
