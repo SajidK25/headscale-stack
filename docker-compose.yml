@@ -47,7 +47,7 @@ services:
       - "traefik.http.routers.headscale.entrypoints=https"
       - "traefik.http.routers.headscale.tls.certresolver=letsEncrypt"
       # 1. Handle preflight OPTIONS directly (return 204 + CORS headers)
-      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolalloworiginlist=https://headscale-ui.t99ltd.com"
+      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolalloworiginlist=https://headscale-ui.t99ltd.com,https://pangolin.t99ltd.com"
       - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolallowmethods=GET,POST,OPTIONS,DELETE"
       - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolallowheaders=*"
       - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolmaxage=100"
