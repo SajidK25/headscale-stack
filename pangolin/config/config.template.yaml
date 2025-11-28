@@ -11,7 +11,7 @@ server:
   secret: "${PANGOLIN_SERVER_SECRET}"
 
 gerbil:
-  base_endpoint: "${BASE_DOMAIN}"
+  base_endpoint: "${PANGOLIN_DASHBOARD_URL}"
 
 headscale:
   url: "${HEADSCALE_SERVER_URL}"
