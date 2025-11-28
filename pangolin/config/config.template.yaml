@@ -32,7 +32,7 @@ auth:
   method: none
 
 logging:
-  level: info
+  level: debug
 
 db:
   type: sqlite
