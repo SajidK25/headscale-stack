@@ -86,7 +86,11 @@ services:
     volumes:
       - ./pangolin/config:/app/config
     environment:
-      - HEADSCALE_URL=http://headscale:8080
+      - BASE_DOMAIN=pangolin.t99ltd.com   
+      - PANGOLIN_DASHBOARD_URL=https://pangolin.t99ltd.com
+      - PANGOLIN_SERVER_SECRET=pangolin-a97774b3857efc774d725ed2dcbc733303c38a4b7b059e220160658543b59039
+      - HEADSCALE_SERVER_URL=https://headscale.t99ltd.com
+
     networks:
       - traefik
     labels:

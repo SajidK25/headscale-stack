@@ -30,7 +30,7 @@ flags:
 
 
 headscale:
-  url: http://headscale:8080  # Points to Headscale in the same Docker network
+  url: ${HEADSCALE_SERVER_URL}  # Points to Headscale in the same Docker network
 
 auth:
   method: none  # 'none' for local testing (no login required); change to 'oidc' or 'headscale' later
