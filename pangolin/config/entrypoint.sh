@@ -20,7 +20,7 @@ ls -l /app/config || true
 envsubst < /app/config/config.template.yaml > /app/config/config.yaml
 
 echo "[ENTRYPOINT] Config generated:"
-cat /app/config/config.yaml
+# cat /app/config/config.yaml
 
 echo "[ENTRYPOINT] Starting Pangolin..."
 exec "$@"
