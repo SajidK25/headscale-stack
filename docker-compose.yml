@@ -1,35 +1,26 @@
 services:
   traefik:
-    image: traefik:v3.1
-    container_name: traefik
-    restart: unless-stopped
+    image: "traefik:v3.3.4"
+    container_name: "traefik"
+    restart: "always"
     ports:
       - "80:80"
       - "443:443"
-    command:
-      - --api.dashboard=true
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --providers.docker.network=traefik
-
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-
-      # HTTP → HTTPS redirect
-      - --entrypoints.web.http.redirections.entrypoint.to=websecure
-      - --entrypoints.web.http.redirections.entrypoint.scheme=https
-
-      # Let's Encrypt (TLS-ALPN-01 – works perfectly when ports 80+443 are open)
-      - --certificatesresolvers.le.acme.tlschallenge=true
-      - --certificatesresolvers.le.acme.email=sajidk25@gmail.com   # ← CHANGE TO YOUR REAL EMAIL
-      - --certificatesresolvers.le.acme.storage=/acme/acme.json
-
-      - --log.level=INFO
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik/acme:/acme
     networks:
       - traefik
+    volumes:
+      - "./traefik/letsencrypt:/etc/traefik/acme"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik/config/static.yml:/etc/traefik/traefik.yml:ro"
+      - "./traefik/config/dynamic.yml:/etc/traefik/config.yaml:ro"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.entrypoints=https
+      - traefik.http.routers.traefik.rule=Host(`traefik.t99ltd.com`) # [Attention]
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.tls.certresolver=letsEncrypt
+      - traefik.http.routers.traefik.tls=true
+      - traefik.http.services.traefik.loadbalancer.server.port=8080
 
   headscale:
     image: headscale/headscale:stable
@@ -38,39 +29,37 @@ services:
     volumes:
       - headscale_data:/var/lib/headscale
       - ./headscale/config:/etc/headscale
-      - ./headscale/lib:/var/lib/headscale
-      - ./headscale/run:/var/run/headscale
+      - ./headscale/data:/var/lib/headscale
+    ports:
+      - "8080:8080"
     command: serve
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
     networks:
       - traefik
     labels:
-      - traefik.enable=true
-      - traefik.docker.network=traefik
-      # - traefik.http.routers.headscale-rtr.rule=Host(`headscale.example.com`) && PathPrefix(`/`)
-      # - traefik.http.routers.headscale-rtr.entrypoints=websecure
-      # - traefik.http.routers.headscale-rtr.tls.certresolver=le
-      # - traefik.http.routers.headscale-rtr.service=headscale-svc
-      # - traefik.http.services.headscale-svc.loadbalancer.server.port=8080
-      # - traefik.http.routers.headscale-rtr.middlewares=limit-headscale
-      # # Optional part for file upload max sizes
-      # - traefik.http.middlewares.limit-headscale.buffering.maxRequestBodyBytes=50000000 # optional, only necessary for enabled file uploads
-      # - traefik.http.middlewares.limit-headscale.buffering.maxResponseBodyBytes=50000000 # optional, only necessary for enabled file uploads
-      # - traefik.http.middlewares.limit-headscale.buffering.memRequestBodyBytes=50000000 # optional, only necessary for enabled file uploads
-      # - traefik.http.middlewares.limit-headscale.buffering.memResponseBodyBytes=50000000 # optional, only necessary for enabled file uploads
-      # gRPC + HTTP/2 for modern Tailscale clients
-      - "traefik.http.routers.headscale-grpc.rule=Host(`headscale.t99ltd.com`)"
-      - "traefik.http.routers.headscale-grpc.entrypoints=websecure"
-      - "traefik.http.routers.headscale-grpc.tls.certresolver=le"
-      - "traefik.http.routers.headscale-grpc.service=headscale-grpc"
-      - "traefik.http.services.headscale-grpc.loadbalancer.server.port=50443"
-      - "traefik.http.routers.headscale-grpc.grpc=true"
-
-      # Legacy HTTP endpoints (registration, metrics, etc.)
-      - "traefik.http.routers.headscale-http.rule=Host(`headscale.t99ltd.com`) && !PathPrefix(`/`)"
-      - "traefik.http.routers.headscale-http.entrypoints=websecure"
-      - "traefik.http.routers.headscale-http.tls.certresolver=le"
-      - "traefik.http.routers.headscale-http.service=headscale-http"
-      - "traefik.http.services.headscale-http.loadbalancer.server.port=8080"
+      - "traefik.enable=true"
+      - "traefik.http.routers.headscale.rule=Host(`headscale.t99ltd.com`)"
+      - "traefik.http.routers.headscale.entrypoints=https"
+      - "traefik.http.routers.headscale.tls.certresolver=letsEncrypt"
+      # 1. Handle preflight OPTIONS directly (return 204 + CORS headers)
+      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolalloworiginlist=https://headscale-ui.t99ltd.com"
+      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolallowmethods=GET,POST,OPTIONS,DELETE"
+      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolallowheaders=*"
+      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolmaxage=100"
+      - "traefik.http.middlewares.headscale-cors-preflight.headers.addvaryheader=true"
+      # 2. Add CORS headers to real responses
+      - "traefik.http.middlewares.headscale-cors-real.headers.accesscontrolalloworiginlist=https://headscale-ui.t99ltd.com"
+      - "traefik.http.middlewares.headscale-cors-real.headers.accesscontrolallowmethods=GET,POST,OPTIONS,DELETE"
+      - "traefik.http.middlewares.headscale-cors-real.headers.accesscontrolallowheaders=*"
+      # 3. Chain them: preflight → real
+      - "traefik.http.middlewares.headscale-cors.chain.middlewares=headscale-cors-preflight,headscale-cors-real"
+      - "traefik.http.routers.headscale.middlewares=headscale-cors"
+      - "traefik.http.services.headscale.loadbalancer.server.port=8080"
 
   headscale-ui:
     image: ghcr.io/gurucomputing/headscale-ui:latest
@@ -85,8 +74,8 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.headscale-ui.rule=Host(`headscale-ui.t99ltd.com`)"
-      - "traefik.http.routers.headscale-ui.entrypoints=websecure"
-      - "traefik.http.routers.headscale-ui.tls.certresolver=le"
+      - "traefik.http.routers.headscale-ui.entrypoints=https"
+      - "traefik.http.routers.headscale-ui.tls.certresolver=letsEncrypt"
       - "traefik.http.routers.headscale-ui.service=headscale-ui"
       - "traefik.http.services.headscale-ui.loadbalancer.server.port=8080"
 
@@ -103,24 +92,29 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
-      - "traefik.http.routers.pangolin.rule=Host(`pangolin.t99ltd.com`)"
-      - "traefik.http.routers.pangolin.entrypoints=websecure"
-      - "traefik.http.routers.pangolin.tls.certresolver=le"
+      - "traefik.http.routers.pangolin.rule=Host(`pangolin.t99ltd.com`) && !PathPrefix(`/api/v1`)"
+      - "traefik.http.routers.pangolin.entrypoints=https"
+      - "traefik.http.routers.pangolin.tls.certresolver=letsEncrypt"
       - "traefik.http.routers.pangolin.service=pangolin"
       - "traefik.http.services.pangolin.loadbalancer.server.port=3002"
 
-  traefik-dashboard:
-    image: traefik/whoami
-    container_name: traefik-dashboard
-    networks:
-      - traefik
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.t99ltd.com`)"
-      - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.routers.traefik.tls.certresolver=le"
-      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.pangolin-api.rule=Host(`pangolin.t99ltd.com`) && PathPrefix(`/api/v1`)"
+      - "traefik.http.routers.pangolin-api.entrypoints=https"
+      - "traefik.http.routers.pangolin-api.tls.certresolver=letsEncrypt"
+      - "traefik.http.routers.pangolin-api.service=pangolin-api"
+      - "traefik.http.services.pangolin-api.loadbalancer.server.port=3000"
 
+      - "traefik.http.routers.pangolin-ws.rule=Host(`pangolin.t99ltd.com`)"
+      - "traefik.http.routers.pangolin-ws.entrypoints=https"
+      - "traefik.http.routers.pangolin-ws.tls.certresolver=letsEncrypt"
+      - "traefik.http.routers.pangolin-ws.service=pangolin-api"
+      - "traefik.http.services.pangolin-ws.loadbalancer.server.port=3000"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
+      interval: "3s"
+      timeout: "3s"
+      retries: 15
 volumes:
   headscale_data:
 
