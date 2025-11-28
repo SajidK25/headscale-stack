@@ -2,19 +2,19 @@
 # https://docs.pangolin.net/self-host/advanced/config-file
 
 app:
-  dashboard_url: https://pangolin.t99ltd.com
+  dashboard_url: ${PANGOLIN_DASHBOARD_URL}
   log_level: debug
 
 domains:
   domain1:
-    base_domain: example.com
+    base_domain: ${BASE_DOMAIN}
 
 server:
-  baseUrl: https://pangolin.t99ltd.com
-  secret: pangolin-a97774b3857efc774d725ed2dcbc733303c38a4b7b059e220160658543b59039
+  baseUrl: ${PANGOLIN_DASHBOARD_URL}
+  secret: ${PANGOLIN_SERVER_SECRET}
 
 gerbil:
-  base_endpoint: example.com
+  base_endpoint: ${BASE_DOMAIN}
 
 orgs:
   block_size: 24

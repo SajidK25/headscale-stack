@@ -1,3 +1,4 @@
 headscale/lib/
 headscale/lib/
 pangolin/config/db/
+.env
