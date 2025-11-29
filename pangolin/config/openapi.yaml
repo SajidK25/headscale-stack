@@ -2692,7 +2692,7 @@ paths:
           in: query
         - schema:
             type: string
-            default: '2025-11-26T17:34:17.049Z'
+            default: '2025-11-29T16:31:58.697Z'
           required: false
           name: timeEnd
           in: query

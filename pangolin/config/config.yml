@@ -2,7 +2,7 @@
 # https://docs.pangolin.net/self-host/advanced/config-file
 
 app:
-  dashboard_url: https://pangolin.t99ltd.com
+  dashboard_url: http://5.161.105.106:3002 # https://pangolin.t99ltd.com
   log_level: debug
 
 domains:
@@ -10,7 +10,7 @@ domains:
     base_domain: example.com
 
 server:
-  baseUrl: https://pangolin.t99ltd.com
+  baseUrl: http://5.161.105.106:3002  # https://pangolin.t99ltd.com
   secret: pangolin-a97774b3857efc774d725ed2dcbc733303c38a4b7b059e220160658543b59039
 
 gerbil:
