@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: "traefik:v3.3.4"
+    image: "traefik:v3.4"
     container_name: "traefik"
     restart: "always"
     ports:
@@ -12,7 +12,6 @@ services:
       - "./traefik/letsencrypt:/etc/traefik/acme"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "./traefik/config/static.yml:/etc/traefik/traefik.yml:ro"
-      - "./traefik/config/dynamic.yml:/etc/traefik/config.yaml:ro"
     labels:
       - traefik.enable=true
       - traefik.http.routers.traefik.entrypoints=https
@@ -78,43 +77,6 @@ services:
       - "traefik.http.routers.headscale-ui.tls.certresolver=letsEncrypt"
       - "traefik.http.routers.headscale-ui.service=headscale-ui"
       - "traefik.http.services.headscale-ui.loadbalancer.server.port=8080"
-
-  pangolin:
-    image: fosrl/pangolin:latest
-    container_name: pangolin
-    restart: unless-stopped
-    volumes:
-      - ./pangolin/config:/app/config
-    environment:
-      - HEADSCALE_URL=http://headscale:8080
-    networks:
-      - traefik
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik"
-      - "traefik.http.routers.pangolin.rule=Host(`pangolin.t99ltd.com`) && !PathPrefix(`/api/v1`)"
-      - "traefik.http.routers.pangolin.entrypoints=https"
-      - "traefik.http.routers.pangolin.tls.certresolver=letsEncrypt"
-      - "traefik.http.routers.pangolin.service=pangolin"
-      - "traefik.http.services.pangolin.loadbalancer.server.port=3002"
-
-      - "traefik.http.routers.pangolin-api.rule=Host(`pangolin.t99ltd.com`) && PathPrefix(`/api/v1`)"
-      - "traefik.http.routers.pangolin-api.entrypoints=https"
-      - "traefik.http.routers.pangolin-api.tls.certresolver=letsEncrypt"
-      - "traefik.http.routers.pangolin-api.service=pangolin-api"
-      - "traefik.http.services.pangolin-api.loadbalancer.server.port=3000"
-
-      - "traefik.http.routers.pangolin-ws.rule=Host(`pangolin.t99ltd.com`)"
-      - "traefik.http.routers.pangolin-ws.entrypoints=https"
-      - "traefik.http.routers.pangolin-ws.tls.certresolver=letsEncrypt"
-      - "traefik.http.routers.pangolin-ws.service=pangolin-api"
-      - "traefik.http.services.pangolin-ws.loadbalancer.server.port=3000"
-
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
-      interval: "3s"
-      timeout: "3s"
-      retries: 15
 volumes:
   headscale_data:
 
