@@ -38,8 +38,8 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.src_valid_mark=1
-    networks:
-      - traefik
+    # networks:
+    #   - traefik
     # labels:
     #   - "traefik.enable=true"
     #   - "traefik.http.routers.headscale.rule=Host(`headscale.t99ltd.com`)"
@@ -70,8 +70,8 @@ services:
     ports:
       - "8084:8080"
   
-    networks:
-      - traefik
+    # networks:
+    #   - traefik
     # labels:
     #   - "traefik.enable=true"
     #   - "traefik.docker.network=traefik"
@@ -92,11 +92,11 @@ services:
       - './headplane/headplane-data:/var/lib/headplane'
       - ./headscale/config/config.yaml:/etc/headscale/config.yaml
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - traefik
+    # networks:
+    #   - traefik
 volumes:
   headscale_data:
 
-networks:
-  traefik:
-    external: false
+# networks:
+#   traefik:
+#     external: false
