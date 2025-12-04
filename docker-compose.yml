@@ -22,12 +22,13 @@ services:
   #     - traefik.http.services.traefik.loadbalancer.server.port=8080
 
   headscale:
-    image: headscale/headscale:stable
+    # image: headscale/headscale:stable
+    build: ./headscale
     container_name: headscale
     restart: unless-stopped
     volumes:
       - headscale_data:/var/lib/headscale
-      - ./headscale/config:/etc/headscale
+      # - ./headscale/config:/etc/headscale
       - ./headscale/data:/var/lib/headscale
     ports:
       - "8083:8080"
@@ -82,15 +83,16 @@ services:
     #   - "traefik.http.services.headscale-ui.loadbalancer.server.port=8080"
   
   headplane:
-    image: ghcr.io/tale/headplane:latest
+    build: ./headplane
+    # image: ghcr.io/tale/headplane:latest
     container_name: headplane
     restart: unless-stopped
     ports:
       - '3000:3000'
     volumes:
-      - './headplane/config.yaml:/etc/headplane/config.yaml'
+      # - './headplane/config.yaml:/etc/headplane/config.yaml'
       - './headplane/headplane-data:/var/lib/headplane'
-      - ./headscale/config/config.yaml:/etc/headscale/config.yaml
+      # - ./headscale/config/config.yaml:/etc/headscale/config.yaml
       - /var/run/docker.sock:/var/run/docker.sock:ro
     # networks:
     #   - traefik
