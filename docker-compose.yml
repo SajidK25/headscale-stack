@@ -1,25 +1,25 @@
 services:
-  traefik:
-    image: "traefik:v3.4"
-    container_name: "traefik"
-    restart: "always"
-    ports:
-      - "80:80"
-      - "443:443"
-    networks:
-      - traefik
-    volumes:
-      - "./traefik/letsencrypt:/etc/traefik/acme"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "./traefik/config/static.yml:/etc/traefik/traefik.yml:ro"
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.traefik.entrypoints=https
-      - traefik.http.routers.traefik.rule=Host(`traefik.t99ltd.com`) # [Attention]
-      - traefik.http.routers.traefik.service=api@internal
-      - traefik.http.routers.traefik.tls.certresolver=letsEncrypt
-      - traefik.http.routers.traefik.tls=true
-      - traefik.http.services.traefik.loadbalancer.server.port=8080
+  # traefik:
+  #   image: "traefik:v3.4"
+  #   container_name: "traefik"
+  #   restart: "always"
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   networks:
+  #     - traefik
+  #   volumes:
+  #     - "./traefik/letsencrypt:/etc/traefik/acme"
+  #     - "/var/run/docker.sock:/var/run/docker.sock:ro"
+  #     - "./traefik/config/static.yml:/etc/traefik/traefik.yml:ro"
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.traefik.entrypoints=https
+  #     - traefik.http.routers.traefik.rule=Host(`traefik.t99ltd.com`) # [Attention]
+  #     - traefik.http.routers.traefik.service=api@internal
+  #     - traefik.http.routers.traefik.tls.certresolver=letsEncrypt
+  #     - traefik.http.routers.traefik.tls=true
+  #     - traefik.http.services.traefik.loadbalancer.server.port=8080
 
   headscale:
     image: headscale/headscale:stable
@@ -30,7 +30,7 @@ services:
       - ./headscale/config:/etc/headscale
       - ./headscale/data:/var/lib/headscale
     ports:
-      - "8080:8080"
+      - "8083:8080"
     command: serve
     cap_add:
       - NET_ADMIN
@@ -40,25 +40,25 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
     networks:
       - traefik
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.headscale.rule=Host(`headscale.t99ltd.com`)"
-      - "traefik.http.routers.headscale.entrypoints=https"
-      - "traefik.http.routers.headscale.tls.certresolver=letsEncrypt"
-      # 1. Handle preflight OPTIONS directly (return 204 + CORS headers)
-      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolalloworiginlist=https://headscale-ui.t99ltd.com,https://pangolin.t99ltd.com"
-      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolallowmethods=GET,POST,OPTIONS,DELETE"
-      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolallowheaders=*"
-      - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolmaxage=100"
-      - "traefik.http.middlewares.headscale-cors-preflight.headers.addvaryheader=true"
-      # 2. Add CORS headers to real responses
-      - "traefik.http.middlewares.headscale-cors-real.headers.accesscontrolalloworiginlist=https://headscale-ui.t99ltd.com"
-      - "traefik.http.middlewares.headscale-cors-real.headers.accesscontrolallowmethods=GET,POST,OPTIONS,DELETE"
-      - "traefik.http.middlewares.headscale-cors-real.headers.accesscontrolallowheaders=*"
-      # 3. Chain them: preflight → real
-      - "traefik.http.middlewares.headscale-cors.chain.middlewares=headscale-cors-preflight,headscale-cors-real"
-      - "traefik.http.routers.headscale.middlewares=headscale-cors"
-      - "traefik.http.services.headscale.loadbalancer.server.port=8080"
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.headscale.rule=Host(`headscale.t99ltd.com`)"
+    #   - "traefik.http.routers.headscale.entrypoints=https"
+    #   - "traefik.http.routers.headscale.tls.certresolver=letsEncrypt"
+    #   # 1. Handle preflight OPTIONS directly (return 204 + CORS headers)
+    #   - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolalloworiginlist=https://headscale-ui.t99ltd.com,https://pangolin.t99ltd.com"
+    #   - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolallowmethods=GET,POST,OPTIONS,DELETE"
+    #   - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolallowheaders=*"
+    #   - "traefik.http.middlewares.headscale-cors-preflight.headers.accesscontrolmaxage=100"
+    #   - "traefik.http.middlewares.headscale-cors-preflight.headers.addvaryheader=true"
+    #   # 2. Add CORS headers to real responses
+    #   - "traefik.http.middlewares.headscale-cors-real.headers.accesscontrolalloworiginlist=https://headscale-ui.t99ltd.com"
+    #   - "traefik.http.middlewares.headscale-cors-real.headers.accesscontrolallowmethods=GET,POST,OPTIONS,DELETE"
+    #   - "traefik.http.middlewares.headscale-cors-real.headers.accesscontrolallowheaders=*"
+    #   # 3. Chain them: preflight → real
+    #   - "traefik.http.middlewares.headscale-cors.chain.middlewares=headscale-cors-preflight,headscale-cors-real"
+    #   - "traefik.http.routers.headscale.middlewares=headscale-cors"
+    #   - "traefik.http.services.headscale.loadbalancer.server.port=8080"
 
   headscale-ui:
     image: ghcr.io/gurucomputing/headscale-ui:latest
@@ -67,19 +67,36 @@ services:
     environment:
       - AUTHENTICATION_METHOD=disabled
       - HEADSCALE_API_URL=http://headscale:8080
+    ports:
+      - "8084:8080"
+  
     networks:
       - traefik
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik"
-      - "traefik.http.routers.headscale-ui.rule=Host(`headscale-ui.t99ltd.com`)"
-      - "traefik.http.routers.headscale-ui.entrypoints=https"
-      - "traefik.http.routers.headscale-ui.tls.certresolver=letsEncrypt"
-      - "traefik.http.routers.headscale-ui.service=headscale-ui"
-      - "traefik.http.services.headscale-ui.loadbalancer.server.port=8080"
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.docker.network=traefik"
+    #   - "traefik.http.routers.headscale-ui.rule=Host(`headscale-ui.t99ltd.com`)"
+    #   - "traefik.http.routers.headscale-ui.entrypoints=https"
+    #   - "traefik.http.routers.headscale-ui.tls.certresolver=letsEncrypt"
+    #   - "traefik.http.routers.headscale-ui.service=headscale-ui"
+    #   - "traefik.http.services.headscale-ui.loadbalancer.server.port=8080"
+  
+  headplane:
+    image: ghcr.io/tale/headplane:latest
+    container_name: headplane
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    volumes:
+      - './headplane/config.yaml:/etc/headplane/config.yaml'
+      - './headplane/headplane-data:/var/lib/headplane'
+      - ./headscale/config/config.yaml:/etc/headscale/config.yaml
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik
 volumes:
   headscale_data:
 
 networks:
   traefik:
-    external: true
+    external: false
